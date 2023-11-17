@@ -1,106 +1,140 @@
-function addNewWEField()
-{
-    let newNode=document.createElement('textarea');
-    newNode.classList.add("form-control");
-    newNode.classList.add("weField");
-    newNode.classList.add("mt-2");
-    newNode.setAttribute("rows",3);
-    newNode.setAttribute("placeholder","Enter here");
-    
+let todoItemsContainer = document.getElementById("todoItemsContainer");
+let addTodoButton = document.getElementById("addTodoButton");
+let saveTodoButton = document.getElementById("saveTodoButton");
 
-    let weOb = document.getElementById("we");
-
-    let weAddButtonOb = document.getElementById("weAddButton");
-
-    weOb.insertBefore(newNode,weAddButtonOb);
-
-}
-function addNewaqField()
-{
-    let newNode=document.createElement('textarea');
-    newNode.classList.add("form-control");
-    newNode.classList.add("aqField");
-    newNode.classList.add("mt-2");
-    newNode.setAttribute("rows",3);
-    newNode.setAttribute("placeholder","Enter here");
-    
-
-    let aqOb = document.getElementById("aq");
-
-    let aqAddButtonOb = document.getElementById("aqAddButton");
-
-    aqOb.insertBefore(newNode,aqAddButtonOb);
-
-}
-
-function addNeweqField()
-{
-    let newNode=document.createElement('textarea');
-    newNode.classList.add("form-control");
-    newNode.classList.add("eqField");
-    newNode.classList.add("mt-2");
-    newNode.setAttribute("rows",3);
-    newNode.setAttribute("placeholder","Enter here");
-    
-
-    let skOb = document.getElementById("sk");
-
-    let skAddButtonOb = document.getElementById("skAddButton");
-
-    skOb.insertBefore(newNode,skAddButtonOb);
-
-}
-
-function generateCV()
-{
-    let nameField = document.getElementById("nameField").value;
-    let nameT1=document.getElementById("nameT1");
-    nameT1.innerHTML =nameField;
-
-    document.getElementById("nameT2").innerHTML = nameField;
-
-    document.getElementById("contactT").innerHTML = document.getElementById("contactField").value;
-    document.getElementById("addressT").innerHTML = document.getElementById("addressField").value;
-    document.getElementById("linkedT").innerHTML = document.getElementById("linkedField").value;
-    document.getElementById("gitT").innerHTML = document.getElementById("gitField").value;
-    document.getElementById("twitterT").innerHTML = document.getElementById("twitterField").value;
-
-    document.getElementById("objectiveT").innerHTML = document.getElementById("objectiveField").value;
-
-    let wes=document.getElementsByClassName("weField")
-    let str='';
-    for(let e of wes)
-    {
-        str=str+`<li> ${e.value} </li>`;
+function getTodoListFromLocalStorage() {
+    let stringifiedTodoList = localStorage.getItem("todoList");
+    let parsedTodoList = JSON.parse(stringifiedTodoList);
+    if (parsedTodoList === null) {
+        return [];
+    } else {
+        return parsedTodoList;
     }
-    document.getElementById("weT").innerHTML=str;
+}
 
+let todoList = getTodoListFromLocalStorage();
+let todosCount = todoList.length;
 
-    let aqs=document.getElementsByClassName("aqField")
-    let str1='';
-    for(let e of aqs)
-    {
-        str1=str1+`<li> ${e.value} </li>`;
+saveTodoButton.onclick = function() {
+    localStorage.setItem("todoList", JSON.stringify(todoList));
+};
+
+function onAddTodo() {
+    let userInputElement = document.getElementById("todoUserInput");
+    let userInputValue = userInputElement.value;
+
+    if (userInputValue === "") {
+        alert("Enter Valid Text");
+        return;
     }
-    document.getElementById("aqT").innerHTML=str1;
 
+    todosCount = todosCount + 1;
 
-    let sks=document.getElementsByClassName("eqField")
-    let str2=''
-    for(let e of sks)
-    {
-        str2=str2+`<li> ${e.value} </li>`
+    let newTodo = {
+        text: userInputValue,
+        uniqueNo: todosCount,
+        isChecked: false
+    };
+    todoList.push(newTodo);
+    createAndAppendTodo(newTodo);
+    userInputElement.value = "";
+}
+
+addTodoButton.onclick = function() {
+    onAddTodo();
+};
+
+function onTodoStatusChange(checkboxId, labelId, todoId) {
+    let checkboxElement = document.getElementById(checkboxId);
+    let labelElement = document.getElementById(labelId);
+    labelElement.classList.toggle("checked");
+
+    let todoObjectIndex = todoList.findIndex(function(eachTodo) {
+        let eachTodoId = "todo" + eachTodo.uniqueNo;
+
+        if (eachTodoId === todoId) {
+            return true;
+        } else {
+            return false;
+        }
+    });
+
+    let todoObject = todoList[todoObjectIndex];
+
+    if (todoObject.isChecked === true) {
+        todoObject.isChecked = false;
+    } else {
+        todoObject.isChecked = true;
     }
-    document.getElementById("skillT").innerHTML=str2;
-
-
-    document.getElementById('cv-form').style.display='none';
-    document.getElementById('cv-template').style.display='block';
 
 }
 
-function printCV()
-{
-    window.print();
+function onDeleteTodo(todoId) {
+    let todoElement = document.getElementById(todoId);
+    todoItemsContainer.removeChild(todoElement);
+
+    let deleteElementIndex = todoList.findIndex(function(eachTodo) {
+        let eachTodoId = "todo" + eachTodo.uniqueNo;
+        if (eachTodoId === todoId) {
+            return true;
+        } else {
+            return false;
+        }
+    });
+
+    todoList.splice(deleteElementIndex, 1);
 }
 
+function createAndAppendTodo(todo) {
+    let todoId = "todo" + todo.uniqueNo;
+    let checkboxId = "checkbox" + todo.uniqueNo;
+    let labelId = "label" + todo.uniqueNo;
+
+    let todoElement = document.createElement("li");
+    todoElement.classList.add("todo-item-container", "d-flex", "flex-row");
+    todoElement.id = todoId;
+    todoItemsContainer.appendChild(todoElement);
+
+    let inputElement = document.createElement("input");
+    inputElement.type = "checkbox";
+    inputElement.id = checkboxId;
+    inputElement.checked = todo.isChecked;
+
+    inputElement.onclick = function() {
+        onTodoStatusChange(checkboxId, labelId, todoId);
+    };
+
+    inputElement.classList.add("checkbox-input");
+    todoElement.appendChild(inputElement);
+
+    let labelContainer = document.createElement("div");
+    labelContainer.classList.add("label-container", "d-flex", "flex-row");
+    todoElement.appendChild(labelContainer);
+
+    let labelElement = document.createElement("label");
+    labelElement.setAttribute("for", checkboxId);
+    labelElement.id = labelId;
+    labelElement.classList.add("checkbox-label");
+    labelElement.textContent = todo.text;
+    if (todo.isChecked === true) {
+        labelElement.classList.add("checked");
+    }
+    labelContainer.appendChild(labelElement);
+
+    let deleteIconContainer = document.createElement("div");
+    deleteIconContainer.classList.add("delete-icon-container");
+    labelContainer.appendChild(deleteIconContainer);
+
+    let deleteIcon = document.createElement("i");
+    deleteIcon.classList.add("far", "fa-trash-alt", "delete-icon");
+
+    deleteIcon.onclick = function() {
+        onDeleteTodo(todoId);
+    };
+
+    deleteIconContainer.appendChild(deleteIcon);
+}
+
+for (let todo of todoList) {
+    createAndAppendTodo(todo);
+}
